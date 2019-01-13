@@ -3,23 +3,74 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import AppBar from 'material-ui/AppBar';
 import RaisedButton from 'material-ui/RaisedButton';
 import TextField from 'material-ui/TextField';
-import DropDownMenu from 'material-ui/DropDownMenu';
-import MenuItem from 'material-ui/MenuItem';
 import axios from 'axios';
-import UploadPage from './UploadPage';
-var apiBaseUrl = "http://192.168.43.47:8080/register/";
+import { InputLabel, FormControl } from '@material-ui/core';
+var apiBaseUrl = "http://192.168.43.47:8080/login/";
 
 class Login extends Component {
   constructor(props){
     super(props);
-    var localloginComponent=[];
-    localloginComponent.push(
+    this.state = {
+      userid: this.props.userid,
+      password: '',
+      status: ''
+    };
+    this.getContent = this.getContent.bind(this);
+  }
+
+  handleClick(event){
+    var that = this;
+    var payload={
+      "userid": this.state.userid,
+	    "password":this.state.password
+    };
+    const options = {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      data: JSON.stringify(payload),
+      url: apiBaseUrl
+    };
+
+    axios(options).then(function (response) {
+     console.log(response);
+     if(response.data.code == 200){
+       console.log("Login successfully");
+       that.props.updateLoggedIn(true);
+       that.props.updateUserId(that.state.userid);
+       that.setState({
+         status: ''
+       });
+      } else if(response.data.code == 204){
+       console.log("Username password do not match");
+       that.setState({
+         status: 'Username password do not match'
+       });
+       that.props.updateLoggedIn(false);
+     } else{
+       console.log("Username does not exists");
+       that.props.updateLoggedIn(false);
+       that.setState({
+         status: 'Username does not exists'
+       });
+     }
+   }).catch(function (error) {
+     console.log(error);
+     that.setState({
+       status: 'Some error exists'
+     });
+   });
+  }
+
+  getContent() {
+    return (<React.Fragment>
       <MuiThemeProvider>
         <div>
          <TextField
-           hintText="Enter your College Rollno"
-           floatingLabelText="Student Id"
-           onChange = {(event,newValue)=>this.setState({username:newValue})}
+           hintText="Enter your UserName"
+           floatingLabelText="User Name"
+           onChange = {(event,newValue)=>this.setState({userid:newValue})}
            />
          <br/>
            <TextField
@@ -30,182 +81,22 @@ class Login extends Component {
              />
            <br/>
            <RaisedButton label="Submit" primary={true} style={style} onClick={(event) => this.handleClick(event)}/>
+           <br/>
+           <FormControl variant = "outlined" >
+           <InputLabel>{this.state.status}</InputLabel>
+           </FormControl>
        </div>
        </MuiThemeProvider>
-    )
-    this.state={
-      username:'',
-      password:'',
-      menuValue:1,
-      loginComponent:localloginComponent,
-      loginRole:'student'
-    }
+    </React.Fragment>)
   }
-  componentWillMount(){
-  // console.log("willmount prop values",this.props);
-  if(this.props.role != undefined){
-    if(this.props.role == 'student'){
-      console.log("in student componentWillMount");
-      var localloginComponent=[];
-      localloginComponent.push(
-        <MuiThemeProvider>
-          <div>
-           <TextField
-             hintText="Enter your College Rollno"
-             floatingLabelText="Student Id"
-             onChange = {(event,newValue) => this.setState({username:newValue})}
-             />
-           <br/>
-             <TextField
-               type="password"
-               hintText="Enter your Password"
-               floatingLabelText="Password"
-               onChange = {(event,newValue) => this.setState({password:newValue})}
-               />
-             <br/>
-             <RaisedButton label="Submit" primary={true} style={style} onClick={(event) => this.handleClick(event)}/>
-         </div>
-         </MuiThemeProvider>
-      )
-      this.setState({menuValue:1,loginComponent:localloginComponent,loginRole:'student'})
-    }
-    else if(this.props.role == 'teacher'){
-      console.log("in teacher componentWillMount");
-      var localloginComponent=[];
-      localloginComponent.push(
-        <MuiThemeProvider>
-          <div>
-           <TextField
-             hintText="Enter your College Rollno"
-             floatingLabelText="Teacher Id"
-             onChange = {(event,newValue) => this.setState({username:newValue})}
-             />
-           <br/>
-             <TextField
-               type="password"
-               hintText="Enter your Password"
-               floatingLabelText="Password"
-               onChange = {(event,newValue) => this.setState({password:newValue})}
-               />
-             <br/>
-             <RaisedButton label="Submit" primary={true} style={style} onClick={(event) => this.handleClick(event)}/>
-         </div>
-         </MuiThemeProvider>
-      )
-      this.setState({menuValue:2,loginComponent:localloginComponent,loginRole:'teacher'})
-    }
-  }
-  }
-  handleClick(event){
-    var self = this;
-    var payload={
-      "userid":this.state.username,
-	    "password":this.state.password,
-      "role":this.state.loginRole
-    }
-    const options = {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json'
-      },
-      data: JSON.stringify(payload),
-      url: apiBaseUrl + 'login'
-    };
-    axios(options)
-   .then(function (response) {
-     console.log(response);
-     if(response.data.code == 200){
-       console.log("Login successfull");
-       var uploadScreen=[];
-       uploadScreen.push(<UploadPage appContext={self.props.appContext} role={self.state.loginRole}/>)
-       self.props.appContext.setState({loginPage:[],uploadScreen:uploadScreen})
-     }
-     else if(response.data.code == 204){
-       console.log("Username password do not match");
-       alert(response.data.success)
-     }
-     else{
-       console.log("Username does not exists");
-       alert("Username does not exist");
-     }
-   })
-   .catch(function (error) {
-     console.log(error);
-   });
-  }
-  handleMenuChange(value){
-    console.log("menuvalue",value);
-    var loginRole;
-    if(value==1){
-      var localloginComponent=[];
-      loginRole='student';
-      localloginComponent.push(
-        <MuiThemeProvider>
-          <div>
-           <TextField
-             hintText="Enter your College Rollno"
-             floatingLabelText="Student Id"
-             onChange = {(event,newValue) => this.setState({username:newValue})}
-             />
-           <br/>
-             <TextField
-               type="password"
-               hintText="Enter your Password"
-               floatingLabelText="Password"
-               onChange = {(event,newValue) => this.setState({password:newValue})}
-               />
-             <br/>
-             <RaisedButton label="Submit" primary={true} style={style} onClick={(event) => this.handleClick(event)}/>
-         </div>
-         </MuiThemeProvider>
-      )
-    }
-    else if(value == 2){
-      var localloginComponent=[];
-      loginRole='teacher';
-      localloginComponent.push(
-        <MuiThemeProvider>
-          <div>
-           <TextField
-             hintText="Enter your College Rollno"
-             floatingLabelText="Teacher Id"
-             onChange = {(event,newValue) => this.setState({username:newValue})}
-             />
-           <br/>
-             <TextField
-               type="password"
-               hintText="Enter your Password"
-               floatingLabelText="Password"
-               onChange = {(event,newValue) => this.setState({password:newValue})}
-               />
-             <br/>
-             <RaisedButton label="Submit" primary={true} style={style} onClick={(event) => this.handleClick(event)}/>
-         </div>
-         </MuiThemeProvider>
-      )
-    }
-    this.setState({menuValue:value,
-                   loginComponent:localloginComponent,
-                   loginRole:loginRole})
-  }
+
   render() {
     return (
       <div>
         <MuiThemeProvider>
-        <AppBar
-             title="Login"
-           />
+        <AppBar title="Login"/>
         </MuiThemeProvider>
-        <MuiThemeProvider>
-        <div>
-        <p>Login as:</p>
-        <DropDownMenu value={this.state.menuValue} onChange={(event,index,value)=>this.handleMenuChange(value)}>
-          <MenuItem value={1} primaryText="Student" />
-          <MenuItem value={2} primaryText="Teacher" />
-        </DropDownMenu>
-        </div>
-        </MuiThemeProvider>
-        {this.state.loginComponent}
+        {this.getContent()}
       </div>
     );
   }

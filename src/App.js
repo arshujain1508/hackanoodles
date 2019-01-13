@@ -1,31 +1,46 @@
 import React, { Component } from 'react';
-import injectTapEventPlugin from 'react-tap-event-plugin';
+import TiffinServiceScreen from './TiffinServiceScreen'
 import './App.css';
-import LoginScreen from './Loginscreen';
-// Needed for onTouchTap
-// http://stackoverflow.com/a/34015469/988941
+import Login from './Login';
 
 class App extends Component {
   constructor(props){
     super(props);
     this.state={
-      loginPage:[],
-      uploadScreen:[]
+      isLoggedIn : false,
+      userid : ''
+    }
+    this.updateLoggedIn = this.updateLoggedIn.bind(this);
+    this.updateUserId = this.updateUserId.bind(this);
+    this.getContent = this.getContent.bind(this);
+  }
+
+  updateLoggedIn(value) {
+     console.log("in logged in successfully");
+    this.setState({
+      isLoggedIn : value
+    });
+  }
+
+  updateUserId(value) {
+    console.log("in updte user id successfully");
+    this.setState({
+      userid: value
+    });
+  }
+
+  getContent() {
+    if(!this.state.isLoggedIn) {
+      return (<React.Fragment><Login updateLoggedIn={this.updateLoggedIn} updateUserId={this.updateUserId} userid={this.state.userid}/></React.Fragment>);
+    } else {
+      return (<React.Fragment><TiffinServiceScreen userid={this.state.userid}/></React.Fragment>);
     }
   }
-  componentWillMount(){
-    var loginPage =[];
-    loginPage.push(<LoginScreen appContext={this}/>);
-    this.setState({
-                  loginPage:loginPage
-                    })
-  }
+
   render() {
+    console.log(this.state.isLoggedIn);
     return (
-      <div className="App">
-        {this.state.loginPage}
-        {this.state.uploadScreen}
-      </div>
+      <div className="App">{this.getContent()}</div>
     );
   }
 }
